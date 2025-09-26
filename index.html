@@ -1,0 +1,1686 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cashmate - Your Financial Companion</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <!-- jsPDF and html2canvas for PDF generation -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <style>
+        :root {
+            --bg-color: #0a192f;
+            --card-bg-color: rgba(10, 25, 47, 0.55);
+            --text-color: #e6f1ff;
+            --primary-gradient-start: #4f46e5;
+            --primary-gradient-end: #ec4899;
+        }
+
+        .theme-sunrise {
+            --bg-color: #f3e0d2;
+            --card-bg-color: rgba(255, 255, 255, 0.5);
+            --text-color: #3f322a;
+            --primary-gradient-start: #ff8c42;
+            --primary-gradient-end: #ff3c5f;
+        }
+
+        .theme-forest {
+            --bg-color: #1a2e2a;
+            --card-bg-color: rgba(13, 44, 38, 0.6);
+            --text-color: #d1e7e4;
+            --primary-gradient-start: #28a745;
+            --primary-gradient-end: #20c997;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            position: relative;
+            overflow-x: hidden;
+            transition: background-color 0.5s, color 0.5s;
+        }
+
+        /* Starry Night Background */
+        .stars-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            z-index: -1;
+        }
+
+        .star {
+            position: absolute;
+            background-color: white;
+            border-radius: 50%;
+            animation: twinkle linear infinite;
+        }
+
+        @keyframes twinkle {
+            0%, 100% { opacity: 0; transform: scale(0.5); }
+            50% { opacity: 1; transform: scale(1); }
+        }
+        
+        /* Glassmorphism Card (Original for Dashboard) */
+        .glass-card {
+            background: var(--card-bg-color);
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        /* New Card Style for Expense Tracker */
+        .card {
+            backdrop-filter: blur(16px) saturate(180%);
+            -webkit-backdrop-filter: blur(16px) saturate(180%);
+            background-color: rgba(31, 41, 55, 0.75);
+            border-radius: 24px;
+            border: 1px solid rgba(75, 85, 99, 0.3);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1), 0 4px 10px rgba(0, 0, 0, 0.08);
+            transform: translateY(0);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 45px rgba(0, 0, 0, 0.15), 0 6px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Animated Gradient Text */
+        .animated-gradient-text {
+            background: linear-gradient(90deg, var(--primary-gradient-start), var(--primary-gradient-end), #f59e0b, #10b981);
+            background-size: 400% 400%;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: gradient-animation 10s ease infinite;
+        }
+        
+        @keyframes gradient-animation {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+        
+        /* Dashboard Card Hover Effect */
+        .dashboard-card {
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            display: flex;
+            flex-direction: column;
+        }
+        .dashboard-card:hover {            box-shadow: 0 20px 30px rgba(0, 0, 0, 0.2), 0 0 20px rgba(79, 70, 229, 0.5);
+        }
+
+        /* Custom Modal */
+        .modal {
+            transition: opacity 0.3s ease, transform 0.3s ease;
+        }
+        .modal-content {
+             transition: transform 0.3s ease;
+        }
+        
+        /* Notification Bar */
+        .notification {
+            transition: transform 0.5s cubic-bezier(0.68, -0.55, 0.27, 1.55);
+        }
+
+        /* Badges */
+        .badge-card {
+             perspective: 1000px;
+        }
+        .badge-inner {
+            transition: transform 0.6s;
+            transform-style: preserve-3d;
+        }
+        .badge-card:hover .badge-inner {
+            transform: rotateY(180deg);
+        }
+        .badge-front, .badge-back {
+            -webkit-backface-visibility: hidden;
+            backface-visibility: hidden;
+        }
+        .badge-back {
+            transform: rotateY(180deg);
+        }
+        
+        /* Buttons and Inputs from new design */
+        .btn-primary {
+            background: linear-gradient(135deg, #3B82F6, #6366F1);
+            box-shadow: 0 4px 15px rgba(59, 130, 246, 0.4);
+            transition: all 0.3s ease;
+        }
+        .btn-primary:hover {
+            box-shadow: 0 6px 20px rgba(59, 130, 246, 0.6);
+            transform: translateY(-2px);
+        }
+        .btn-secondary {
+            background-color: #374151;
+            color: #D1D5DB;
+            transition: all 0.3s ease;
+        }
+        .btn-secondary:hover {
+            background-color: #4B5563;
+            transform: translateY(-1px);
+        }
+        .input-field {
+            background-color: rgba(55, 65, 81, 0.5);
+            border: 1px solid rgba(75, 85, 99, 0.5);
+            transition: all 0.3s ease;
+        }
+        .input-field:focus {
+            outline: none;
+            border-color: #4F46E5;
+            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.3);
+        }
+        /* Custom message box */
+        #messageBox {
+            position: fixed;
+            top: 1rem;
+            right: 1rem;
+            transform: translateX(120%);
+            transition: transform 0.3s ease-in-out;
+            z-index: 1000;
+        }
+
+        /* --- Styles for Split Expenses Page --- */
+        .split-container {
+             --card-bg: #1e1e1e;
+             --text-color: #e0e0e0;
+             --accent-color: #bb86fc;
+             --secondary-accent: #03dac6;
+             --border-color: #333;
+             --box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
+             background-color: var(--card-bg);
+             border: 1px solid var(--border-color);
+             border-radius: 20px;
+             box-shadow: var(--box-shadow);
+             width: 100%;
+             max-width: 500px;
+             text-align: center;
+             position: relative;
+             z-index: 2;
+             transform: perspective(1000px) rotateY(0deg) scale(1);
+             transition: transform 0.8s ease-in-out;
+        }
+        
+        .split-container .logo .fa-coins {
+             font-size: 2.5rem;
+             color: #ffc107;
+             margin-right: 10px;
+             text-shadow: 2px 2px 5px rgba(0, 0, 0, 0.5);
+             animation: bounce 2s infinite;
+        }
+         .split-container .logo h1 {
+             font-size: 3rem;
+             color: var(--accent-color);
+             text-shadow: 2px 2px 5px rgba(0, 0, 0, 0.5);
+             background: linear-gradient(90deg, #bb86fc, #03dac6);
+             -webkit-background-clip: text;
+             -webkit-text-fill-color: transparent;
+             font-weight: 800;
+        }
+        @keyframes bounce { 0%, 20%, 50%, 80%, 100% { transform: translateY(0); } 40% { transform: translateY(-20px); } 60% { transform: translateY(-10px); } }
+        .split-container .form-group { margin-bottom: 20px; text-align: left; position: relative; }
+        .split-container .form-group label { display: block; margin-bottom: 8px; color: var(--secondary-accent); font-weight: 600; }
+        .split-container .form-group input { width: 100%; padding: 12px; border-radius: 10px; border: 1px solid var(--border-color); background-color: #2a2a2a; color: var(--text-color); font-size: 1rem; transition: border-color 0.3s ease, transform 0.3s ease; }
+        .split-container .form-group input:focus { outline: none; border-color: var(--accent-color); transform: translateY(-2px); box-shadow: 0 0 10px rgba(187, 134, 252, 0.5); }
+        .split-container .calculate-btn { width: 100%; padding: 15px; background-color: var(--accent-color); color: var(--card-bg); border: none; border-radius: 10px; font-size: 1.1rem; font-weight: 600; cursor: pointer; transition: background-color 0.3s ease, transform 0.3s ease; animation: pulse 1.5s infinite; }
+        @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.02); } 100% { transform: scale(1); } }
+        .split-container .calculate-btn:hover { background-color: #a462f7; transform: translateY(0px) scale(1.02); animation: none; }
+        .split-container .results-container { margin-top: 30px; opacity: 0; visibility: hidden; transform: translateY(20px); transition: opacity 0.5s ease-in-out, transform 0.5s ease-in-out, visibility 0.5s; }
+        .split-container .results-container.visible { opacity: 1; visibility: visible; transform: translateY(0); }
+        .split-container .result-box { background-color: #2a2a2a; padding: 20px; border-radius: 10px; border: 1px solid var(--border-color); margin-bottom: 20px; text-align: left; }
+        .split-container .result-box h3 { margin-bottom: 10px; font-size: 1.2rem; color: var(--secondary-accent); }
+        .split-container .result-box span { font-weight: 600; color: var(--text-color); }
+        .split-container .share-buttons { display: flex; flex-direction: column; md:flex-direction: row; justify-content: space-around; gap: 10px; }
+        .split-container .share-btn { flex-grow: 1; padding: 12px; border: none; border-radius: 8px; font-size: 1rem; font-weight: 600; cursor: pointer; transition: transform 0.2s ease, box-shadow 0.2s ease; }
+        .split-container .share-btn:hover { transform: translateY(-2px); box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3); }
+        .split-container .whatsapp-btn { background-color: #25D366; color: white; }
+        .split-container .telegram-btn { background-color: #0088cc; color: white; }
+        .split-container .email-btn { background-color: #c71610; color: white; }
+
+        /* --- Styles for Reminders Page --- */
+        #reminders-view {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #0d0d0d;
+            color: #f0f0f0;
+            background-image:
+                radial-gradient(circle at 10% 20%, rgba(187,134,252,0.1) 0%, transparent 50%),
+                radial-gradient(circle at 90% 80%, rgba(3,218,198,0.1) 0%, transparent 50%),
+                url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100%" height="100%" viewBox="0 0 100 100"><rect x="0" y="0" width="100" height="100" fill="%230d0d0d"/><path d="M0 15L15 0M85 0L100 15M0 85L15 100M85 100L100 85M0 50L50 0M50 0L100 50M50 100L0 50M100 50L50 100" stroke="%231a1a1a" stroke-width="0.3"/></svg>');
+            background-size: cover, cover, 300px 300px;
+            background-attachment: fixed;
+        }
+        #reminders-view .container { width: 90%; max-width: 1200px; margin: 40px auto; display: grid; grid-template-columns: 1fr; gap: 30px; animation: fadeIn 1s ease-in-out; position: relative; z-index: 1; }
+        @media (min-width: 768px) { #reminders-view .container { grid-template-columns: 2fr 1fr; } }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        #reminders-view .card { background-color: #1a1a1a; border-radius: 15px; padding: 30px; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5); transition: transform 0.3s ease, box-shadow 0.3s ease, background-color 0.3s ease; position: relative; overflow: hidden; }
+        #reminders-view .card:hover { transform: translateY(-5px); box-shadow: 0 15px 40px rgba(0, 0, 0, 0.7), 0 0 20px rgba(187, 134, 252, 0.4); background-color: #242424; }
+        #reminders-view .card-header { display: flex; align-items: center; margin-bottom: 20px; }
+        #reminders-view .card-header .material-icons { font-size: 3rem; color: #BB86FC; margin-right: 15px; animation: iconPulse 2s infinite ease-in-out; }
+        @keyframes iconPulse { 0% { transform: scale(1); } 50% { transform: scale(1.05); } 100% { transform: scale(1); } }
+        #reminders-view h2 { margin: 0; font-size: 2.2rem; background: linear-gradient(90deg, #BB86FC, #03DAC6); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        #reminders-view h3 { margin-top: 0; font-size: 1.5rem; color: #03DAC6; }
+        #reminders-view .main-dashboard { display: flex; flex-direction: column; gap: 20px; }
+        #reminders-view .expense-form { display: grid; gap: 20px; }
+        #reminders-view .form-group { display: flex; flex-direction: column; }
+        #reminders-view label { margin-bottom: 8px; color: #03DAC6; font-weight: 600; }
+        #reminders-view input, #reminders-view select { background-color: #2a2a2a; border: 1px solid #333; border-radius: 8px; padding: 12px; color: #f0f0f0; font-size: 1rem; transition: border-color 0.3s ease, box-shadow 0.3s ease; }
+        #reminders-view input:focus, #reminders-view select:focus { outline: none; border-color: #BB86FC; box-shadow: 0 0 0 3px rgba(187, 134, 252, 0.4); }
+        #reminders-view button { background: linear-gradient(90deg, #BB86FC, #03DAC6); border: none; color: #0d0d0d; padding: 15px; border-radius: 8px; font-size: 1.1rem; font-weight: bold; cursor: pointer; transition: transform 0.3s ease, box-shadow 0.3s ease, background-position 0.5s ease; text-shadow: 1px 1px 2px rgba(0,0,0,0.2); background-size: 200% auto; }
+        #reminders-view button:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(0, 0, 0, 0.4); background-position: right center; }
+        #reminders-view .expense-list { list-style: none; padding: 0; display: flex; flex-direction: column; gap: 15px; }
+        #reminders-view .expense-item { display: flex; justify-content: space-between; align-items: center; background-color: #2a2a2a; padding: 15px; border-radius: 10px; transition: background-color 0.3s ease, transform 0.2s ease; border-left: 5px solid #03DAC6; position: relative; overflow: hidden; }
+        #reminders-view .expense-item:hover { background-color: #333; transform: translateX(5px); }
+        #reminders-view .expense-item::before { content: ''; position: absolute; top: 0; left: -100%; width: 100%; height: 100%; background: linear-gradient(90deg, transparent, rgba(3,218,198,0.1), transparent); transition: left 0.5s ease; z-index: 0; }
+        #reminders-view .expense-item:hover::before { left: 0; }
+        #reminders-view .expense-info, #reminders-view .expense-item .date { position: relative; z-index: 1; }
+        #reminders-view .expense-info .amount { font-size: 1.2rem; font-weight: bold; color: #BB86FC; }
+        #reminders-view .expense-info .details { font-size: 0.9rem; color: #999; }
+        #reminders-view .expense-item .date { font-size: 0.8rem; color: #777; }
+        #reminders-view .total-expenses { text-align: right; font-size: 1.5rem; font-weight: bold; margin-top: 20px; color: #03DAC6; border-top: 2px solid #333; padding-top: 20px; animation: pulseTotal 1.5s infinite; }
+        @keyframes pulseTotal { 0% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.02); opacity: 0.9; } 100% { transform: scale(1); opacity: 1; } }
+        #reminders-view .icon-small { font-size: 1.5rem !important; vertical-align: middle; margin-right: 5px; color: #03DAC6; }
+        #reminders-view .brand-title { display: flex; align-items: center; justify-content: center; margin-bottom: 40px; gap: 15px; }
+        #reminders-view .brand-title h1 { font-size: 4rem; font-weight: 900; letter-spacing: -2px; background: linear-gradient(45deg, #BB86FC, #03DAC6, #BB86FC); -webkit-background-clip: text; -webkit-text-fill-color: transparent; text-shadow: 0 0 15px rgba(187, 134, 252, 0.5), 0 0 30px rgba(3, 218, 198, 0.3); animation: textGlow 3s infinite alternate ease-in-out; margin: 0; line-height: 1; }
+        @keyframes textGlow { 0% { text-shadow: 0 0 10px rgba(187, 134, 252, 0.4), 0 0 20px rgba(3, 218, 198, 0.2); } 100% { text-shadow: 0 0 20px rgba(187, 134, 252, 0.8), 0 0 40px rgba(3, 218, 198, 0.4); } }
+        #reminders-view .logo-svg { width: 70px; height: 70px; filter: drop-shadow(0 0 10px #BB86FC); animation: logoSpin 5s infinite linear; }
+        @keyframes logoSpin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        #reminders-view .logo-svg path { fill: url(#logoGradient); }
+        #reminders-view .image-card img { width: 100%; border-radius: 10px; box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3); transition: transform 0.3s ease; }
+        #reminders-view .image-card img:hover { transform: scale(1.02); }
+        #reminders-view .image-container { position: relative; overflow: hidden; border-radius: 10px; }
+        #reminders-view .image-container::before { content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(45deg, rgba(187,134,252,0.2), rgba(3,218,198,0.2)); mix-blend-mode: overlay; opacity: 0; transition: opacity 0.3s ease; }
+        #reminders-view .image-container:hover::before { opacity: 1; }
+    </style>
+</head>
+<body class="overflow-x-hidden">
+
+    <div class="stars-container"></div>
+    
+    <!-- Main Application Container -->
+    <div id="app-container" class="min-h-screen w-full flex items-center justify-center p-4 lg:p-8">
+
+        <!-- Get Started Page -->
+        <div id="get-started-view" class="page-view w-full max-w-md text-center">
+            <h1 class="text-5xl md:text-6xl font-bold mb-2">Welcome to</h1>
+            <h2 class="text-6xl md:text-7xl font-extrabold animated-gradient-text mb-8">Cashmate</h2>
+            <p class="text-lg text-slate-300 mb-12">Track.Save.Grow</p>
+            <div class="space-y-4">
+                <button data-action="navigate" data-target-view="register-view" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-6 rounded-lg text-lg transition-transform transform hover:scale-105">Get Started</button>
+                <button data-action="navigate" data-target-view="login-view" class="w-full bg-gray-700 hover:bg-gray-800 text-white font-bold py-3 px-6 rounded-lg text-lg transition-transform transform hover:scale-105">I have an account</button>
+            </div>
+        </div>
+
+        <!-- Registration Page -->
+        <div id="register-view" class="page-view hidden w-full max-w-md">
+            <div class="glass-card p-8 rounded-2xl shadow-2xl">
+                <h2 class="text-4xl font-bold text-center mb-6">Create Account</h2>
+                <form id="register-form" class="space-y-6">
+                    <input id="register-name" type="text" placeholder="Full Name" class="w-full bg-gray-900/50 border border-gray-700 rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-indigo-500" required>
+                    <input id="register-email" type="email" placeholder="Email" class="w-full bg-gray-900/50 border border-gray-700 rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-indigo-500" required>
+                    <input id="register-password" type="password" placeholder="Password" class="w-full bg-gray-900/50 border border-gray-700 rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-indigo-500" required>
+                    <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 rounded-lg text-lg transition-transform transform hover:scale-105">Register</button>
+                </form>
+                <p class="text-center mt-6">Already have an account? <button data-action="navigate" data-target-view="login-view" class="text-indigo-400 hover:underline">Login</button></p>
+            </div>
+        </div>
+
+        <!-- Login Page -->
+        <div id="login-view" class="page-view hidden w-full max-w-md">
+            <div class="glass-card p-8 rounded-2xl shadow-2xl">
+                 <h2 class="text-4xl font-bold text-center mb-2">Welcome Back!</h2>
+                 <p id="login-welcome-name" class="text-center text-lg text-slate-300 mb-6"></p>
+                <form id="login-form" class="space-y-6">
+                    <input id="login-email" type="email" placeholder="Email" class="w-full bg-gray-900/50 border border-gray-700 rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-indigo-500" required>
+                    <input id="login-password" type="password" placeholder="Password" class="w-full bg-gray-900/50 border border-gray-700 rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-indigo-500" required>
+                    <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 rounded-lg text-lg transition-transform transform hover:scale-105">Login</button>
+                </form>
+                <p class="text-center mt-6">Don't have an account? <button data-action="navigate" data-target-view="register-view" class="text-indigo-400 hover:underline">Register</button></p>
+            </div>
+        </div>
+
+        <!-- Main Dashboard -->
+        <div id="dashboard-view" class="page-view hidden w-full max-w-6xl">
+            <header class="text-center mb-12 relative">
+                <h1 id="dashboard-greeting" class="text-2xl text-slate-300">Welcome to</h1>
+                <h2 class="text-5xl font-extrabold animated-gradient-text mb-3">Cashmate</h2>
+                <p class="text-slate-400 italic">"Small savings today, big dreams tomorrow."</p>
+                 <p class="text-xs text-gray-500 mt-2">User: <span id="user-id-display"></span></p>
+                 <button data-action="logout" class="absolute top-0 right-0 bg-red-500/50 hover:bg-red-500/70 text-white font-semibold py-2 px-4 rounded-lg transition-colors">Log Out</button>
+            </header>
+
+            <!-- Totals Section -->
+             <section class="mb-12">
+                <div class="flex justify-center items-center mb-4 space-x-2">
+                     <button data-period="daily" class="dashboard-filter-btn bg-indigo-500/50 text-white font-semibold py-2 px-4 rounded-lg">Daily</button>
+                     <button data-period="weekly" class="dashboard-filter-btn text-white font-semibold py-2 px-4 rounded-lg">Weekly</button>
+                     <button data-period="monthly" class="dashboard-filter-btn text-white font-semibold py-2 px-4 rounded-lg">Monthly</button>
+                </div>
+                 <div class="glass-card p-6 rounded-2xl grid grid-cols-1 md:grid-cols-2 gap-6 text-center">
+                     <div>
+                         <h3 class="text-lg text-green-400 uppercase tracking-wider">Cash In</h3>
+                         <p id="dashboard-cash-in" class="text-4xl font-bold text-green-300">₹0.00</p>
+                     </div>
+                     <div>
+                         <h3 class="text-lg text-red-400 uppercase tracking-wider">Cash Out</h3>
+                         <p id="dashboard-cash-out" class="text-4xl font-bold text-red-300">₹0.00</p>
+                     </div>
+                 </div>
+             </section>
+
+            <main class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                <!-- Daily Expenses Card -->
+                <div class="dashboard-card glass-card p-6 rounded-2xl shadow-xl cursor-pointer">
+                    <div class="flex items-center space-x-4 mb-4">
+                        <div class="bg-red-500/20 p-3 rounded-full"><svg class="w-6 h-6 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H7a3 3 0 00-3 3v8a3 3 0 003 3z"></path></svg></div>
+                        <h3 class="text-xl font-bold">Daily Transactions</h3>
+                    </div>
+                    <p class="text-slate-400 mb-4 flex-grow">Log your daily income and expenses to manage your wallet.</p>
+                    <button data-action="navigate" data-target-view="expense-tracker-view" class="w-full mt-auto bg-red-500/50 hover:bg-red-500/70 text-white font-semibold py-2 rounded-lg transition">Track Now</button>
+                </div>
+
+                <!-- Financial Goals Card -->
+                <div class="dashboard-card glass-card p-6 rounded-2xl shadow-xl cursor-pointer">
+                    <div class="flex items-center space-x-4 mb-4">
+                         <div class="bg-green-500/20 p-3 rounded-full"><svg class="w-6 h-6 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path></svg></div>
+                        <h3 class="text-xl font-bold">Financial Goals</h3>
+                    </div>
+                    <p class="text-slate-400 mb-4 flex-grow">Set and monitor your financial goals to achieve your dreams.</p>
+                    <button data-action="navigate" data-target-view="financial-goals-view" class="w-full mt-auto bg-green-500/50 hover:bg-green-500/70 text-white font-semibold py-2 rounded-lg transition">Set Goals</button>
+                </div>
+                
+                <!-- Streaks & Rewards Card -->
+                <div class="dashboard-card glass-card p-6 rounded-2xl shadow-xl cursor-pointer">
+                    <div class="flex items-center space-x-4 mb-4">
+                        <div class="bg-yellow-500/20 p-3 rounded-full"><svg class="w-6 h-6 text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-12v4m-2-2h4m5 10v4m-2-2h4M5 3a2 2 0 00-2 2v1m14 0V5a2 2 0 00-2-2h-1m-4 16v-1m0-14v1m0 14a2 2 0 002 2h1m-4-16a2 2 0 00-2 2v1m0 14V5a2 2 0 00-2-2H5m14 0a2 2 0 002-2v-1m-4 16a2 2 0 002-2v-1m0-14a2 2 0 00-2-2h-1"></path></svg></div>
+                        <h3 class="text-xl font-bold">Streaks & Rewards</h3>
+                    </div>
+                    <p class="text-slate-400 mb-4 flex-grow">Maintain streaks and unlock badges for your financial discipline.</p>
+                    <button data-action="navigate" data-target-view="rewards-view" class="w-full mt-auto bg-yellow-500/50 hover:bg-yellow-500/70 text-white font-semibold py-2 rounded-lg transition">View Rewards</button>
+                </div>
+
+                <!-- Split Expenses Card -->
+                <div class="dashboard-card glass-card p-6 rounded-2xl shadow-xl cursor-pointer">
+                    <div class="flex items-center space-x-4 mb-4">
+                        <div class="bg-purple-500/20 p-3 rounded-full"><svg class="w-6 h-6 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path></svg></div>
+                        <h3 class="text-xl font-bold">Split Expenses</h3>
+                    </div>
+                    <p class="text-slate-400 mb-4 flex-grow">Easily split bills and expenses with friends and family.</p>
+                    <button data-action="navigate" data-target-view="split-expenses-view" class="w-full mt-auto bg-purple-500/50 hover:bg-purple-500/70 text-white font-semibold py-2 rounded-lg transition">Split Bill</button>
+                </div>
+
+                <!-- Set Reminders Card -->
+                <div class="dashboard-card glass-card p-6 rounded-2xl shadow-xl cursor-pointer">
+                    <div class="flex items-center space-x-4 mb-4">
+                        <div class="bg-cyan-500/20 p-3 rounded-full"><svg class="w-6 h-6 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path></svg></div>
+                        <h3 class="text-xl font-bold">Set Reminders</h3>
+                    </div>
+                    <p class="text-slate-400 mb-4 flex-grow">"Don't put off until tomorrow what you can pay today."</p>
+                    <button data-action="navigate" data-target-view="reminders-view" class="w-full mt-auto bg-cyan-500/50 hover:bg-cyan-500/70 text-white font-semibold py-2 rounded-lg transition">Set Reminder</button>
+                </div>
+                
+                <!-- Fintech News Card -->
+                <div class="dashboard-card glass-card p-6 rounded-2xl shadow-xl cursor-pointer" data-action="navigate" data-target-view="news-view">
+                    <div class="flex items-center space-x-4 mb-4">
+                        <div class="bg-blue-500/20 p-3 rounded-full"><svg class="w-6 h-6 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3h2m0 0V4a2 2 0 00-2-2h-2a2 2 0 00-2 2v3m0 0V4a2 2 0 00-2-2H9a2 2 0 00-2 2v3m0 0H5"></path></svg></div>
+                        <h3 class="text-xl font-bold">Fintech News</h3>
+                    </div>
+                    <p class="text-slate-400 mb-4 flex-grow">Stay updated with the latest news in the world of finance.</p>
+                    <p class="text-red-500 font-bold mb-5 flex-grow">Coming Soon</p>
+
+                </div>
+            </main>
+
+            <!-- Expense Breakdown Chart -->
+            <section class="mt-12">
+                <h2 class="text-3xl font-bold text-center mb-8">Expense Breakdown by Category</h2>
+                <div class="glass-card p-6 rounded-2xl">
+                    <div id="dashboard-chart-container" class="max-w-md mx-auto h-80">
+                         <canvas id="dashboard-expense-chart"></canvas>
+                    </div>
+                    <p id="dashboard-chart-placeholder" class="text-center text-slate-400 py-20 hidden">Log some expenses in the 'Daily Transactions' tracker to see your breakdown here!</p>
+                </div>
+            </section>
+        </div>
+
+        <!-- Daily Expense Tracker -->
+        <div id="expense-tracker-view" class="page-view hidden w-full max-w-7xl relative">
+            <button data-action="navigate" data-target-view="dashboard-view" class="absolute -top-4 -left-4 text-indigo-400 hover:text-indigo-300 transition">&larr; Back to Dashboard</button>
+            
+            <main class="container mx-auto p-4 md:p-8 relative z-10">
+                <header class="flex flex-col items-center justify-center text-center py-12 text-white">
+                     <h2 class="text-4xl font-bold mb-4 text-center animated-gradient-text">Daily Transactions</h2>
+                     <p id="wallet-balance-display" class="text-2xl font-bold text-slate-300"></p>
+                </header>
+
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    <div class="space-y-8">
+                        <!-- Manage Wallet Card -->
+                        <div class="card p-6">
+                             <h2 class="text-2xl font-semibold mb-4 flex items-center gap-2 text-green-400">
+                                <i class="fa-solid fa-wallet"></i> Manage Wallet
+                            </h2>
+                            <div class="space-y-4">
+                                <div>
+                                    <label for="wallet-amount" class="block text-sm font-medium mb-1">Amount</label>
+                                    <input type="number" id="wallet-amount" class="w-full p-2 rounded-xl input-field" placeholder="e.g., 1000">
+                                </div>
+                                <div class="grid grid-cols-2 gap-4">
+                                    <button id="add-funds-btn" class="w-full bg-green-600 hover:bg-green-700 text-white p-3 rounded-xl font-semibold flex items-center justify-center gap-2">
+                                        <i class="fa-solid fa-plus"></i> Add
+                                    </button>
+                                    <button id="withdraw-funds-btn" class="w-full bg-red-600 hover:bg-red-700 text-white p-3 rounded-xl font-semibold flex items-center justify-center gap-2">
+                                        <i class="fa-solid fa-minus"></i> Withdraw
+                                    </button>
+                                </div>
+                             
+                            </div>
+                        </div>
+
+                        <!-- Add Expense Card -->
+                        <div class="card p-6">
+                            <h2 class="text-2xl font-semibold mb-4 flex items-center gap-2 text-blue-400">
+                                <i class="fa-solid fa-money-bill-transfer"></i> Add New Expense
+                            </h2>
+                            <form id="expenseForm" class="space-y-4">
+                                <div>
+                                    <label for="expenseAmount" class="block text-sm font-medium mb-1">Amount</label>
+                                    <input type="number" id="expenseAmount" class="w-full p-2 rounded-xl input-field" placeholder="e.g., 500" required>
+                                </div>
+                                <div>
+                                    <label for="expenseCategory" class="block text-sm font-medium mb-1">Category</label>
+                                    <input type="text" id="expenseCategory" class="w-full p-2 rounded-xl input-field" placeholder="e.g., Food, Travel" required>
+                                </div>
+                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                    <div>
+                                        <label for="expenseDate" class="block text-sm font-medium mb-1">Date</label>
+                                        <input type="date" id="expenseDate" class="w-full p-2 rounded-xl input-field">
+                                    </div>
+                                    <div id="payment-method-container">
+                                        <label for="expensePayment" class="block text-sm font-medium mb-1">Method of Payment</label>
+                                        <select id="expensePayment" class="w-full p-2 rounded-xl input-field">
+                                            <option value="Cash">Cash</option>
+                                            <option value="UPI">UPI</option>
+                                            <option value="Card">Card</option>
+                                            <option value="Bank">Bank</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="mt-2">
+                                    <button type="submit" class="w-full btn-primary text-white p-3 rounded-xl font-semibold">
+                                        <i class="fa-solid fa-plus-circle mr-2"></i> Add Expense
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                    <!-- Transaction Summary Card -->
+                     <div class="card p-6">
+                        <div class="flex flex-col sm:flex-row items-center justify-between mb-4">
+                            <h3 class="text-xl font-semibold text-gray-300 mb-2 sm:mb-0">Transaction Summary</h3>
+                            <div class="flex flex-wrap gap-2">
+                                <button data-period="daily" class="summary-btn btn-secondary px-3 py-1 rounded-full font-medium text-sm">Daily</button>
+                                <button data-period="weekly" class="summary-btn btn-secondary px-3 py-1 rounded-full font-medium text-sm">Weekly</button>
+                                <button data-period="monthly" class="summary-btn btn-secondary px-3 py-1 rounded-full font-medium text-sm">Monthly</button>
+                                <button data-period="yearly" class="summary-btn btn-secondary px-3 py-1 rounded-full font-medium text-sm">Yearly</button>
+                                <button data-action="show-date-filter" class="summary-btn btn-secondary px-3 py-1 rounded-full font-medium text-sm">Datewise</button>
+                            </div>
+                        </div>
+                        <div id="expenseSummary" class="bg-gray-800 p-4 rounded-xl max-h-[36rem] overflow-y-auto">
+                            <!-- Summary content will be injected here -->
+                        </div>
+                         <div id="detailed-summary-container" class="mt-4 p-4 rounded-xl border border-gray-700">
+                             <!-- Detailed summary content will be injected here -->
+                         </div>
+                         
+                    </div>
+                </div>
+            </main>
+        </div>
+
+
+        <!-- Financial Goals -->
+        <div id="financial-goals-view" class="page-view hidden w-full max-w-7xl relative">
+            <button data-action="navigate" data-target-view="dashboard-view" class="absolute -top-4 -left-4 text-indigo-400 hover:text-indigo-300 transition">&larr; Back to Dashboard</button>
+            <h2 class="text-4xl font-bold mb-8 text-center animated-gradient-text">Financial Goals</h2>
+            
+            <div class="space-y-8">
+                <!-- Summary and Tips -->
+                <section class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                    <div class="glass-card p-6 rounded-2xl lg:col-span-1">
+                        <h3 class="text-xl font-semibold mb-2">Dashboard Summary</h3>
+                        <p class="text-lg">Active Goals: <span id="active-goals-count" class="font-bold">0</span></p>
+                        <p class="text-lg">Total Target: <span id="total-target-amount" class="font-bold">₹0</span></p>
+                    </div>
+                    <div class="glass-card p-6 rounded-2xl lg:col-span-2">
+                        <h3 class="text-xl font-semibold mb-2">Financial Tip of the Day</h3>
+                        <p id="financial-tip" class="text-lg font-medium text-slate-300">Start by creating your first goal!</p>
+                    </div>
+                </section>
+
+                <!-- Create New Goal -->
+                <section class="glass-card p-6 rounded-2xl">
+                    <h2 class="text-2xl font-semibold mb-4">Create a New Goal</h2>
+                    <form id="goal-form" class="space-y-4">
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <input id="goal-name" type="text" placeholder="Goal Name (e.g., New Laptop)" class="w-full bg-gray-900/50 border border-gray-700 rounded-lg p-3" required>
+                            <input id="goal-target" type="number" placeholder="Target Amount (e.g., 50000)" class="w-full bg-gray-900/50 border border-gray-700 rounded-lg p-3" required>
+                             <select id="goal-method" class="w-full bg-gray-900/50 border border-gray-700 rounded-lg p-3">
+                                <option value="" disabled selected>Primary Saving Source...</option>
+                                <option value="Cash">Cash</option>
+                                <option value="Bank Account">Bank Account</option>
+                            </select>
+                        </div>
+                        <button type="submit" class="w-full md:w-auto bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-6 rounded-lg">Create Goal</button>
+                    </form>
+                </section>
+
+                <!-- Goals List -->
+                <section>
+                    <h2 class="text-2xl font-semibold mb-4">Your Goals</h2>
+                    <div id="goals-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        <!-- Goal cards will be injected here -->
+                    </div>
+                    <p id="no-goals-message" class="text-center text-slate-400 mt-8 py-10">You haven't created any goals yet. Start saving today!</p>
+                </section>
+            </div>
+        </div>
+
+
+        <!-- Rewards System -->
+        <div id="rewards-view" class="page-view hidden w-full max-w-6xl text-center relative">
+            <button data-action="navigate" data-target-view="dashboard-view" class="absolute top-0 left-0 text-indigo-400 hover:text-indigo-300 transition">&larr; Back to Dashboard</button>
+            <h2 class="text-4xl font-bold mb-4 animated-gradient-text">Your Rewards</h2>
+            <p class="text-slate-400 mb-10">Stay disciplined, track daily, and earn these amazing badges!</p>
+            
+            <div class="mb-12">
+                <h3 class="text-2xl font-semibold mb-4">Current Streak</h3>
+                <div class="inline-block bg-yellow-500/20 border border-yellow-500/50 p-6 rounded-full shadow-lg">
+                    <div id="streak-count" class="text-7xl font-bold text-yellow-300">0</div>
+                    <div class="text-yellow-400 uppercase tracking-widest">Days</div>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+                <!-- Badges will be dynamically inserted here -->
+            </div>
+        </div>
+
+        <!-- Split Expenses Page -->
+        <div id="split-expenses-view" class="page-view hidden w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
+             <button data-action="navigate" data-target-view="dashboard-view" class="absolute top-0 left-0 text-indigo-400 hover:text-indigo-300">&larr; Back to Dashboard</button>
+             <div class="w-full min-h-[80vh] flex items-center justify-center">
+                <div class="split-container p-6 md:p-10">
+                     <header>
+                         <div class="logo flex items-center justify-center mb-2">
+                             <h1>Cashmate</h1>
+                         </div>
+                         <p class="text-lg" style="color: var(--secondary-accent);">💰Student Expense Splitter</p>
+                     </header>
+                     <main>
+                         <form id="expense-splitter-form">
+                             <div class="form-group">
+                                 <label for="split-title">Title of Expense</label>
+                                 <input type="text" id="split-title" placeholder="e.g., Trip to Goa, Dinner" required>
+                             </div>
+                             <div class="form-group">
+                                 <label for="split-total-expense">Total Expense (₹)</label>
+                                 <input type="number" id="split-total-expense" placeholder="e.g., 5000" required>
+                             </div>
+                             <div class="form-group">
+                                 <label for="split-num-people">Number of People</label>
+                                 <input type="number" id="split-num-people" placeholder="e.g., 4" required>
+                             </div>
+                             <button type="submit" class="calculate-btn">
+                                 Calculate Share <i class="fas fa-calculator"></i>
+                             </button>
+                         </form>
+                         <div id="split-results" class="results-container">
+                             <div class="result-box">
+                                 <h3>Title: <span id="output-title"></span></h3>
+                                 <h3>Total Expense: ₹<span id="output-total"></span></h3>
+                                 <h3>Share per Person: ₹<span id="output-share"></span></h3>
+                             </div>
+                             <div class="share-buttons">
+                                 <button id="whatsapp-share" class="share-btn whatsapp-btn"><i class="fab fa-whatsapp"></i> WhatsApp</button>
+                                 <button id="telegram-share" class="share-btn telegram-btn"><i class="fab fa-telegram-plane"></i> Telegram</button>
+                                 <button id="email-share" class="share-btn email-btn"><i class="fas fa-envelope"></i> Email</button>
+                             </div>
+                         </div>
+                     </main>
+                 </div>
+            </div>
+        </div>
+
+        <!-- Reminders Page -->
+        <div id="reminders-view" class="page-view hidden w-full">
+            <button data-action="navigate" data-target-view="dashboard-view" class="absolute top-8 left-8 text-indigo-400 hover:text-indigo-300 transition z-10">&larr; Back to Dashboard</button>
+             <div class="container">
+                <svg width="0" height="0" style="position: absolute;">
+                    <defs>
+                        <linearGradient id="logoGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" style="stop-color:#BB86FC;stop-opacity:1" />
+                            <stop offset="100%" style="stop-color:#03DAC6;stop-opacity:1" />
+                        </linearGradient>
+                    </defs>
+                </svg>
+
+                <div class="main-dashboard">
+                    <div class="brand-title">
+                        <svg class="logo-svg" viewBox="0 0 24 24">
+                            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 15c-2.76 0-5-2.24-5-5h2c0 1.66 1.34 3 3 3s3-1.34 3-3V7h2v5c0 2.76-2.24 5-5 5zM9 9h6v2H9V9z"/>
+                        </svg>
+                        <h1>Cashmate</h1>
+                    </div>
+
+                    <div class="card add-expense">
+                        <div class="card-header">
+                            <span class="material-icons">add_circle</span>
+                            <h2>Add New Reminder</h2>
+                        </div>
+                        <form id="reminder-form" class="expense-form">
+                            <div class="form-group">
+                                <label for="reminderName"><span class="material-icons icon-small">notes</span>Expense Name:</label>
+                                <input type="text" id="reminderName" required placeholder="e.g., Party, Rent">
+                            </div>
+                            <div class="form-group">
+                                <label for="reminderAmount"><span class="material-icons icon-small">attach_money</span>Amount:</label>
+                                <input type="number" id="reminderAmount" required min="1" placeholder="e.g., 500">
+                            </div>
+                            <div class="form-group">
+                                <label for="reminderCategory"><span class="material-icons icon-small">category</span>Category:</label>
+                                <select id="reminderCategory" required>
+                                    <option value="">-- Select Category --</option>
+                                    <option value="rent">🏡 Rent</option>
+                                    <option value="wifi">💻 Wi-Fi</option>
+                                    <option value="party">🎉 Party</option>
+                                    <option value="bills">⚡ Monthly Bills</option>
+                                    <option value="others">📦 Others</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="notificationDate"><span class="material-icons icon-small">schedule</span>Set Notification Date:</label>
+                                <input type="date" id="notificationDate">
+                            </div>
+                            <div class="form-group">
+                                <label for="notificationTime"><span class="material-icons icon-small">access_time</span>Set Notification Time:</label>
+                                <input type="time" id="notificationTime">
+                            </div>
+                            <button type="submit" id="addBtn"><span class="material-icons">send</span> Add Reminder</button>
+                        </form>
+                    </div>
+
+                    <div class="card expense-history">
+                        <div class="card-header">
+                            <span class="material-icons">history</span>
+                            <h2>Reminder History</h2>
+                        </div>
+                        <ul id="reminderList" class="expense-list"></ul>
+                        <div class="total-expenses">
+                            Total Amount: ₹<span id="totalReminderAmount">0</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="info-panel">
+                    <div class="card image-card">
+                        <div class="card-header">
+                            <span class="material-icons">analytics</span>
+                            <h3>Your Financial Snapshot</h3>
+                        </div>
+                        <div class="image-container">
+                            <img src="https://placehold.co/300x200/1a1a1a/f0f0f0?text=Financial+Chart" alt="Financial Chart">
+                            <p style="text-align: center; margin-top: 15px; color: #aaa;">Visualizing your spending habits helps you save smarter.</p>
+                        </div>
+                    </div>
+                    <div class="card tip-card">
+                        <div class="card-header">
+                            <span class="material-icons">lightbulb</span>
+                            <h3>Pro Tip</h3>
+                        </div>
+                        <p>Track your spending daily to get a clear picture of where your money is going. Small expenses add up quickly!</p>
+                        <p style="font-style: italic; color: #999;">"A penny saved is a penny earned."</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Generic Modal -->
+    <div id="modal" class="modal fixed inset-0 bg-black/70 flex items-center justify-center p-4 opacity-0 pointer-events-none z-50">
+        <div class="modal-content glass-card rounded-2xl p-8 max-w-sm w-full text-center transform scale-95">
+            <h3 id="modal-title" class="text-2xl font-bold mb-4"></h3>
+            <div id="modal-body">
+                <p id="modal-message" class="text-slate-300 mb-6"></p>
+            </div>
+            <button id="modal-close" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-6 rounded-lg transition-transform transform hover:scale-105">Got it</button>
+        </div>
+    </div>
+    
+    <!-- Wide Notification & Custom Message Box -->
+    <div id="notification-bar" class="notification fixed top-0 left-1/2 -translate-x-1/2 w-full max-w-md p-4 rounded-b-lg shadow-2xl text-center font-semibold z-50 transform -translate-y-full">
+        <p id="notification-message"></p>
+    </div>
+    <div id="messageBox" class="bg-green-500 text-white p-4 rounded-xl shadow-lg">
+        <p id="messageText"></p>
+    </div>
+
+
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+    import { 
+        getAuth, 
+        createUserWithEmailAndPassword, 
+        signInWithEmailAndPassword, 
+        onAuthStateChanged,
+        updateProfile,
+        signOut,
+        sendEmailVerification
+    } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+    import { 
+        getFirestore, 
+        doc, 
+        collection, 
+        addDoc, 
+        getDocs,
+        onSnapshot,
+        setDoc,
+        deleteDoc,
+        query,
+        where,
+        getDoc
+    } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+    const firebaseConfig = {
+        apiKey: "AIzaSyCuOs8L98MPggWHRIrkktalbseS5bZdTNg",
+        authDomain: "cashmate-1bd07.firebaseapp.com",
+        projectId: "cashmate-1bd07",
+        storageBucket: "cashmate-1bd07.appspot.com",
+        messagingSenderId: "230579118255",
+        appId: "1:230579118255:web:67937e9c72ce414e2ef45a",
+        measurementId: "G-HBJ0GMDZJH"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+    
+    // --- App State & Navigation ---
+    let currentUser = null;
+    let dashboardPieChart = null;
+
+    function navigateTo(viewId) {
+        document.querySelectorAll('.page-view').forEach(view => view.classList.add('hidden'));
+        const targetView = document.getElementById(viewId);
+        if(targetView) {
+            targetView.classList.remove('hidden');
+        }
+        window.scrollTo(0, 0);
+
+        // Render content when navigating to a specific view
+        if (viewId === 'dashboard-view') {
+            renderDashboardTotals('daily');
+            renderDashboardPieChart();
+        }
+        if (viewId === 'expense-tracker-view') renderNewExpenseTrackerPage();
+        if (viewId === 'financial-goals-view') renderFinancialGoalsPage();
+        if (viewId === 'rewards-view') renderRewards();
+        if (viewId === 'split-expenses-view') renderSplitExpensesPage();
+        if (viewId === 'reminders-view') renderRemindersPage();
+    }
+
+    // --- Starry Background ---
+    function createStars() {
+        const container = document.querySelector('.stars-container');
+        if (!container || container.children.length > 0) return;
+        const starCount = 150;
+        for (let i = 0; i < starCount; i++) {
+            const star = document.createElement('div');
+            star.className = 'star';
+            const size = Math.random() * 2 + 1;
+            star.style.width = `${size}px`;
+            star.style.height = `${size}px`;
+            star.style.top = `${Math.random() * 100}%`;
+            star.style.left = `${Math.random() * 100}%`;
+            const duration = Math.random() * 3 + 2;
+            const delay = Math.random() * 3;
+            star.style.animationDuration = `${duration}s`;
+            star.style.animationDelay = `${delay}s`;
+            container.appendChild(star);
+        }
+    }
+
+    // --- Modal & Notification Logic ---
+    const modal = document.getElementById('modal');
+    const modalTitle = document.getElementById('modal-title');
+    const modalBody = document.getElementById('modal-body');
+    const modalMessage = document.getElementById('modal-message');
+    const modalClose = document.getElementById('modal-close');
+    const notificationBar = document.getElementById('notification-bar');
+    const notificationMessage = document.getElementById('notification-message');
+    
+    function showModal(title, message, onConfirm = null) {
+        modalTitle.textContent = title;
+        modalMessage.innerHTML = message;
+        modalMessage.style.display = 'block';
+        
+        const existingForm = modalBody.querySelector('form');
+        if (existingForm) modalBody.removeChild(existingForm);
+        if (!modalBody.contains(modalMessage)) {
+            modalBody.insertBefore(modalMessage, modalBody.firstChild);
+        }
+
+        modal.classList.remove('opacity-0', 'pointer-events-none');
+        modal.querySelector('.modal-content').classList.remove('scale-95');
+        
+        modalClose.onclick = null; // Clear previous handlers
+        if(typeof onConfirm === 'function'){
+            modalClose.textContent = "Confirm";
+            modalClose.onclick = () => {
+                onConfirm();
+                hideModal();
+            };
+        } else {
+            modalClose.textContent = "Got it";
+            modalClose.onclick = hideModal;
+        }
+    }
+
+    function showCustomModal(title, formHTML, onFormSubmit) {
+        modalTitle.textContent = title;
+        modalMessage.style.display = 'none';
+        
+        const existingForm = modalBody.querySelector('form');
+        if(existingForm) modalBody.removeChild(existingForm);
+        modalBody.innerHTML = formHTML;
+
+        modal.classList.remove('opacity-0', 'pointer-events-none');
+        modal.querySelector('.modal-content').classList.remove('scale-95');
+
+        const form = modalBody.querySelector('form');
+        if (form) {
+            form.addEventListener('submit', (e) => {
+                e.preventDefault();
+                onFormSubmit(e);
+                hideModal();
+            });
+        }
+
+        modalClose.textContent = "Cancel";
+        modalClose.onclick = hideModal;
+    }
+
+    function hideModal() {
+        modal.classList.add('opacity-0', 'pointer-events-none');
+        modal.querySelector('.modal-content').classList.add('scale-95');
+        modalClose.textContent = "Got it";
+        modalClose.onclick = hideModal;
+    }
+
+    function showNotification(message, type = 'success') {
+        notificationMessage.textContent = message;
+        notificationBar.className = 'notification fixed top-0 left-1/2 -translate-x-1/2 w-full max-w-md p-4 rounded-b-lg shadow-2xl text-center font-semibold z-50 transform -translate-y-full'; // reset classes
+        if (type === 'success') {
+            notificationBar.classList.add('bg-green-500', 'text-white');
+        } else {
+            notificationBar.classList.add('bg-red-500', 'text-white');
+        }
+        notificationBar.classList.remove('-translate-y-full');
+        setTimeout(() => {
+            notificationBar.classList.add('-translate-y-full');
+        }, 3000);
+    }
+    
+    const showMessageBox = (message) => {
+        const messageBox = document.getElementById('messageBox');
+        messageBox.textContent = message;
+        messageBox.style.transform = 'translateX(0)';
+        setTimeout(() => {
+            messageBox.style.transform = 'translateX(120%)';
+        }, 3000);
+    };
+
+    modalClose.addEventListener('click', hideModal);
+
+    function showFeatureComingSoon() {
+        showModal('Coming Soon!', 'This feature is under development and will be available shortly. Stay tuned!');
+    }
+
+    // --- Authentication Logic ---
+    document.getElementById('register-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const name = document.getElementById('register-name').value;
+        const email = document.getElementById('register-email').value;
+        const password = document.getElementById('register-password').value;
+        
+        try {
+            const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+            await updateProfile(userCredential.user, { displayName: name });
+            await sendEmailVerification(userCredential.user);
+            await signOut(auth); // Log out the user immediately after registration
+            showNotification('Registration successful! Please check your email to verify your account before logging in.', 'success');
+            navigateTo('login-view');
+        } catch (error) {
+            showNotification(error.message, 'error');
+        }
+    });
+
+    document.getElementById('login-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const email = document.getElementById('login-email').value;
+        const password = document.getElementById('login-password').value;
+
+        try {
+            const userCredential = await signInWithEmailAndPassword(auth, email, password);
+            if (!userCredential.user.emailVerified) {
+                await signOut(auth);
+                showNotification('Please verify your email before logging in.', 'error');
+            }
+            // onAuthStateChanged will handle navigation if login is successful and email is verified
+        } catch (error) {
+            showNotification(error.message, 'error');
+        }
+    });
+
+    const logOut = async () => {
+        try {
+            await signOut(auth);
+            // onAuthStateChanged will handle navigation
+        } catch (error) {
+            showNotification(error.message, 'error');
+        }
+    };
+
+    // --- DATA HELPERS ---
+    const formatCurrency = (amount) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(amount);
+    
+    const getCollectionRef = (collectionName) => collection(db, 'users', currentUser.uid, collectionName);
+    const getDocRef = (collectionName, docId) => doc(db, 'users', currentUser.uid, collectionName, docId);
+
+    // --- Dashboard Totals & Pie Chart ---
+    async function renderDashboardTotals(period) {
+        if (!currentUser) return;
+        const transactionsQuery = query(getCollectionRef('transactions'));
+        const querySnapshot = await getDocs(transactionsQuery);
+        const transactions = querySnapshot.docs.map(doc => doc.data());
+        
+        const now = new Date();
+        let filteredTransactions = [];
+
+        switch (period) {
+            case 'daily':
+                filteredTransactions = transactions.filter(t => new Date(t.date).toDateString() === now.toDateString());
+                break;
+            case 'weekly':
+                const startOfWeek = new Date(now);
+                startOfWeek.setDate(now.getDate() - (now.getDay() === 0 ? 6 : now.getDay() - 1) ); // Monday as start
+                startOfWeek.setHours(0, 0, 0, 0);
+                filteredTransactions = transactions.filter(t => new Date(t.date) >= startOfWeek);
+                break;
+            case 'monthly':
+                filteredTransactions = transactions.filter(t => {
+                    const tDate = new Date(t.date);
+                    return tDate.getMonth() === now.getMonth() && tDate.getFullYear() === now.getFullYear();
+                });
+                break;
+        }
+
+        const totalIn = filteredTransactions.filter(t => t.type === 'income').reduce((sum, t) => sum + t.amount, 0);
+        const totalOut = filteredTransactions.filter(t => t.type === 'expense').reduce((sum, t) => sum + t.amount, 0);
+
+        document.getElementById('dashboard-cash-in').textContent = formatCurrency(totalIn);
+        document.getElementById('dashboard-cash-out').textContent = formatCurrency(totalOut);
+    }
+
+    async function renderDashboardPieChart() {
+        if (!currentUser) return;
+        const ctx = document.getElementById('dashboard-expense-chart').getContext('2d');
+        const expensesQuery = query(getCollectionRef('transactions'), where('type', '==', 'expense'));
+        const querySnapshot = await getDocs(expensesQuery);
+        const expenses = querySnapshot.docs.map(doc => doc.data());
+
+        const chartContainer = document.getElementById('dashboard-chart-container');
+        const placeholder = document.getElementById('dashboard-chart-placeholder');
+
+        if (dashboardPieChart) {
+            dashboardPieChart.destroy();
+        }
+
+        if (expenses.length === 0) {
+            chartContainer.classList.add('hidden');
+            placeholder.classList.remove('hidden');
+            return;
+        }
+        
+        chartContainer.classList.remove('hidden');
+        placeholder.classList.add('hidden');
+
+        const expenseData = expenses.reduce((acc, exp) => {
+            const category = exp.category.trim() || 'Uncategorized';
+            acc[category] = (acc[category] || 0) + exp.amount;
+            return acc;
+        }, {});
+
+        const chartColors = [
+            'rgba(239, 68, 68, 0.7)',  'rgba(59, 130, 246, 0.7)', 'rgba(245, 158, 11, 0.7)', 
+            'rgba(34, 197, 94, 0.7)', 'rgba(168, 85, 247, 0.7)', 'rgba(236, 72, 153, 0.7)'
+        ];
+
+        dashboardPieChart = new Chart(ctx, {
+            type: 'pie',
+            data: {
+                labels: Object.keys(expenseData),
+                datasets: [{
+                    label: 'Expenses by Category',
+                    data: Object.values(expenseData),
+                    backgroundColor: chartColors,
+                    borderColor: '#0a192f',
+                    borderWidth: 2,
+                    hoverOffset: 4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { position: 'top', labels: { color: '#e6f1ff', font: { size: 14 } } },
+                    tooltip: { callbacks: { label: (c) => `${c.label}: ${formatCurrency(c.parsed)}` } }
+                }
+            }
+        });
+    }
+
+    // --- Daily Transactions Page Logic ---
+    function renderNewExpenseTrackerPage() {
+        if (!currentUser) return;
+        
+        const walletDocRef = doc(db, 'users', currentUser.uid, 'wallet', 'main');
+        onSnapshot(walletDocRef, (doc) => {
+            const wallet = doc.exists() ? doc.data() : { cashIn: 0, cashOut: 0 };
+            const balance = wallet.cashIn - wallet.cashOut;
+            document.getElementById('wallet-balance-display').textContent = `Current Balance: ${formatCurrency(balance)}`;
+        });
+        
+        const currentPeriod = document.querySelector('#expense-tracker-view .summary-btn.bg-indigo-500\\/50')?.dataset.period || 'daily';
+        updateExpenseSummary(currentPeriod);
+    }
+    
+    async function handleWalletTransaction(type) {
+        if (!currentUser) return;
+        const amountInput = document.getElementById('wallet-amount');
+        const amount = parseFloat(amountInput.value);
+        if (isNaN(amount) || amount <= 0) return showMessageBox('Please enter a valid amount.');
+
+        const walletDocRef = doc(db, 'users', currentUser.uid, 'wallet', 'main');
+        
+        try {
+            const docSnap = await getDoc(walletDocRef);
+            const wallet = docSnap.exists() ? docSnap.data() : { cashIn: 0, cashOut: 0 };
+
+            let transaction;
+            if (type === 'income') {
+                wallet.cashIn += amount;
+                transaction = { type: 'income', category: 'Wallet Deposit', amount };
+                showMessageBox('Funds added successfully!');
+            } else { // expense
+                if ((wallet.cashIn - wallet.cashOut) < amount) return showMessageBox('Insufficient balance.');
+                wallet.cashOut += amount;
+                transaction = { type: 'expense', category: 'Wallet Withdrawal', amount, paymentMethod: 'Wallet' };
+                showMessageBox('Funds withdrawn successfully!');
+            }
+            
+            await setDoc(walletDocRef, wallet, { merge: true });
+            
+            const newTransaction = {
+                date: new Date().toISOString().split('T')[0],
+                ...transaction
+            };
+            await addDoc(getCollectionRef('transactions'), newTransaction);
+            
+            amountInput.value = '';
+        } catch (error) {
+            console.error("Error handling wallet transaction: ", error);
+            showMessageBox("Failed to update wallet.", "error");
+        }
+    }
+
+    document.getElementById('expenseForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        if (!currentUser) return;
+        const amount = parseFloat(document.getElementById('expenseAmount').value);
+        const category = document.getElementById('expenseCategory').value;
+        let date = document.getElementById('expenseDate').value;
+        if (!date) date = new Date().toISOString().split('T')[0];
+        const paymentMethod = document.getElementById('expensePayment').value;
+        
+        if (isNaN(amount) || !category) return showMessageBox('Please fill all required fields.');
+        
+        const walletDocRef = doc(db, 'users', currentUser.uid, 'wallet', 'main');
+        const docSnap = await getDoc(walletDocRef);
+        const wallet = docSnap.exists() ? docSnap.data() : { cashIn: 0, cashOut: 0 };
+        
+        if ((wallet.cashIn - wallet.cashOut) < amount) return showMessageBox('Insufficient balance for this expense.');
+
+        wallet.cashOut += amount;
+        await setDoc(walletDocRef, wallet, { merge: true });
+        
+        const newTransaction = {
+            type: 'expense', amount, category, date, paymentMethod
+        };
+        await addDoc(getCollectionRef('transactions'), newTransaction);
+
+        showMessageBox('Expense added successfully!');
+        e.target.reset();
+    });
+
+    document.querySelectorAll('#expense-tracker-view .summary-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            document.querySelectorAll('#expense-tracker-view .summary-btn').forEach(b => b.classList.remove('bg-indigo-500/50'));
+            btn.classList.add('bg-indigo-500/50');
+            updateExpenseSummary(btn.dataset.period);
+        });
+    });
+
+    function updateExpenseSummary(period) {
+        if (!currentUser) return;
+        onSnapshot(query(getCollectionRef('transactions')), (snapshot) => {
+            const transactions = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            const now = new Date();
+            let filtered = [];
+
+            switch (period) {
+                case 'daily': filtered = transactions.filter(t => new Date(t.date).toDateString() === now.toDateString()); break;
+                case 'weekly':
+                    const startOfWeek = new Date(now);
+                    startOfWeek.setDate(now.getDate() - (now.getDay() === 0 ? 6 : now.getDay() - 1));
+                    startOfWeek.setHours(0, 0, 0, 0);
+                    filtered = transactions.filter(t => new Date(t.date) >= startOfWeek);
+                    break;
+                case 'monthly': filtered = transactions.filter(t => { const d = new Date(t.date); return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear(); }); break;
+                case 'yearly': filtered = transactions.filter(t => new Date(t.date).getFullYear() === now.getFullYear()); break;
+            }
+
+            const summaryContainer = document.getElementById('expenseSummary');
+            if (filtered.length === 0) {
+                summaryContainer.innerHTML = '<p class="text-center text-gray-500 py-4">No transactions for this period.</p>';
+            } else {
+                 summaryContainer.innerHTML = `
+                    <table class="min-w-full text-sm">
+                        <tbody class="text-gray-300">
+                        ${filtered.sort((a,b) => new Date(b.date) - new Date(a.date)).map(t => `
+                            <tr class="border-b border-gray-700">
+                                <td class="py-2">${t.date}</td>
+                                <td class="py-2 font-semibold">${t.category}</td>
+                                <td class="py-2 ${t.type === 'income' ? 'text-green-400' : 'text-red-400'} font-bold text-right">${formatCurrency(t.amount)}</td>
+                                <td class="py-2 text-right">
+                                    <button data-action="delete-transaction" data-transaction-id="${t.id}" class="text-red-500 hover:text-red-400">
+                                        <i class="fa-solid fa-trash-can"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                        `).join('')}
+                        </tbody>
+                    </table>`;
+            }
+            updateDetailedSummary(filtered);
+        });
+    }
+    
+    function updateDetailedSummary(filteredTransactions) {
+        const container = document.getElementById('detailed-summary-container');
+        const expenses = filteredTransactions.filter(t => t.type === 'expense');
+        
+        if (expenses.length === 0) {
+            container.innerHTML = '';
+            return;
+        }
+
+        const totals = expenses.reduce((acc, exp) => {
+            const method = exp.paymentMethod || 'N/A';
+            acc[method] = (acc[method] || 0) + exp.amount;
+            acc.total += exp.amount;
+            return acc;
+        }, { Cash: 0, UPI: 0, Card: 0, Bank: 0, Wallet: 0, total: 0 });
+
+        container.innerHTML = `
+            <h4 class="text-lg font-medium mb-2">Expense Overview</h4>
+            <div class="grid grid-cols-2 gap-2 text-sm text-gray-400">
+                <p>Cash: <span class="font-semibold">${formatCurrency(totals.Cash)}</span></p>
+                <p>UPI: <span class="font-semibold">${formatCurrency(totals.UPI)}</span></p>
+                <p>Card: <span class="font-semibold">${formatCurrency(totals.Card)}</span></p>
+                <p>Bank: <span class="font-semibold">${formatCurrency(totals.Bank)}</span></p>
+                <p>From Wallet: <span class="font-semibold">${formatCurrency(totals.Wallet)}</span></p>
+            </div>
+            <p class="mt-2 text-lg font-semibold text-blue-400">Total Expenses: ${formatCurrency(totals.total)}</p>
+        `;
+    }
+
+    async function deleteTransaction(transactionId) {
+        if (!currentUser) return;
+        const transactionDocRef = doc(db, 'users', currentUser.uid, 'transactions', transactionId);
+        
+        try {
+            const transactionDoc = await getDoc(transactionDocRef);
+            if (!transactionDoc.exists()) return;
+            const transactionToDelete = transactionDoc.data();
+
+            showModal('Confirm Deletion', 'Are you sure you want to delete this transaction? This will update your wallet balance.', async () => {
+                const walletDocRef = doc(db, 'users', currentUser.uid, 'wallet', 'main');
+                const docSnap = await getDoc(walletDocRef);
+                const wallet = docSnap.exists() ? docSnap.data() : { cashIn: 0, cashOut: 0 };
+
+                if(transactionToDelete.type === 'income') {
+                    wallet.cashIn -= transactionToDelete.amount;
+                } else {
+                    wallet.cashOut -= transactionToDelete.amount;
+                }
+                
+                await setDoc(walletDocRef, wallet, { merge: true });
+                await deleteDoc(transactionDocRef);
+                showMessageBox('Transaction deleted and wallet updated.');
+            });
+        } catch (error) {
+            console.error("Error deleting transaction: ", error);
+            showMessageBox("Failed to delete transaction.", "error");
+        }
+    }
+
+    // --- Financial Goals Logic ---
+    const financialTips = [
+        "Start saving early, even small amounts add up over time.",
+        "Set a budget and stick to it. Knowing where your money goes is the first step.",
+        "Prioritize needs over wants. Ask yourself if a purchase is truly necessary."
+    ];
+    
+    function renderFinancialGoalsPage() {
+        if (!currentUser) return;
+        const goalsRef = getCollectionRef('goals');
+        onSnapshot(goalsRef, (snapshot) => {
+            const goals = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            const goalsList = document.getElementById('goals-list');
+            const noGoalsMessage = document.getElementById('no-goals-message');
+            const totalTargetEl = document.getElementById('total-target-amount');
+            const activeGoalsCountEl = document.getElementById('active-goals-count');
+            const financialTipEl = document.getElementById('financial-tip');
+            
+            const totalTarget = goals.reduce((sum, goal) => sum + goal.targetAmount, 0);
+            activeGoalsCountEl.textContent = goals.length;
+            totalTargetEl.textContent = formatCurrency(totalTarget);
+            financialTipEl.textContent = financialTips[Math.floor(Math.random() * financialTips.length)];
+
+            if (goals.length === 0) {
+                noGoalsMessage.classList.remove('hidden');
+                goalsList.innerHTML = '';
+            } else {
+                noGoalsMessage.classList.add('hidden');
+                goalsList.innerHTML = goals.map(goal => createGoalCard(goal)).join('');
+                goals.forEach(goal => {
+                    if (goal.targetAmount > 0) initializeGoalChart(goal.id, goal.currentAmount, goal.targetAmount);
+                });
+            }
+        });
+    }
+
+    function createGoalCard(goal) {
+        const progress = (goal.currentAmount / goal.targetAmount) * 100;
+        const formattedProgress = Math.min(progress, 100).toFixed(0);
+        const isCompleted = progress >= 100;
+        const savingsHistoryHTML = (goal.savings && goal.savings.length > 0) ? goal.savings.map(s => 
+            `<li class="flex justify-between items-center text-sm p-2 bg-black/20 rounded-md">
+                <span>${formatCurrency(s.amount)} via ${s.source}</span>
+                <span class="text-slate-400">${new Date(s.date.seconds * 1000).toLocaleDateString()}</span>
+            </li>`
+        ).join('') : '<p class="text-slate-400 text-sm text-center p-2">No savings added yet.</p>';
+        
+        return `
+            <div class="glass-card p-6 rounded-2xl flex flex-col">
+                <div class="flex justify-between items-start mb-4">
+                    <h3 class="text-xl font-semibold truncate pr-2">${goal.name}</h3>
+                    <button data-action="delete-goal" data-goal-id="${goal.id}" class="text-gray-500 hover:text-red-400">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 pointer-events-none" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm6 0a1 1 0 012 0v6a1 1 0 11-2 0V8z" clip-rule="evenodd" /></svg>
+                    </button>
+                </div>
+                <div class="w-full h-32 mb-4"><canvas id="pie-chart-${goal.id}"></canvas></div>
+                <div class="w-full h-3 rounded-full bg-gray-700 overflow-hidden">
+                    <div class="bg-indigo-500 h-full rounded-full" style="width: ${formattedProgress}%; transition: width 0.5s ease;"></div>
+                </div>
+                <p class="text-sm font-semibold mt-2">${formatCurrency(goal.currentAmount)} / ${formatCurrency(goal.targetAmount)} (${formattedProgress}%)</p>
+                <div class="mt-4">
+                    <button data-action="toggle-history" data-goal-id="${goal.id}" class="text-xs text-indigo-300 hover:underline">View History</button>
+                    <div id="history-${goal.id}" class="hidden mt-2 space-y-2 max-h-32 overflow-y-auto pr-2"><ul class="space-y-1">${savingsHistoryHTML}</ul></div>
+                </div>
+                <div class="mt-auto pt-4 text-right">
+                    ${isCompleted ?
+                        `<span class="text-green-400 font-bold px-4 py-2 rounded-lg text-sm bg-green-500/20">Goal Achieved!</span>` :
+                        `<button data-action="open-add-savings" data-goal-id="${goal.id}" class="bg-indigo-500/20 text-indigo-300 px-4 py-2 rounded-lg font-medium text-sm hover:bg-indigo-500/40">Add Savings</button>`
+                    }
+                </div>
+            </div>`;
+    }
+
+    function initializeGoalChart(goalId, currentAmount, targetAmount) {
+        const ctx = document.getElementById(`pie-chart-${goal.id}`).getContext('2d');
+        if (Chart.getChart(ctx)) Chart.getChart(ctx).destroy();
+        new Chart(ctx, {
+            type: 'pie',
+            data: {
+                labels: ['Saved', 'Remaining'],
+                datasets: [{ data: [currentAmount, Math.max(0, targetAmount - currentAmount)], backgroundColor: ['#4f46e5', '#374151'], borderColor: '#0a192f', hoverOffset: 4 }]
+            },
+            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'top', labels: { color: '#e5e7eb' } }, tooltip: { callbacks: { label: (c) => `${c.label}: ${formatCurrency(c.parsed)}` } } } }
+        });
+    }
+
+    document.getElementById('goal-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        if (!currentUser) return;
+        const name = document.getElementById('goal-name').value;
+        const target = parseFloat(document.getElementById('goal-target').value);
+        let method = document.getElementById('goal-method').value;
+        if (!name || isNaN(target) || target <= 0 || !method) return showNotification('Please fill all fields.', 'error');
+        const newGoal = { name, targetAmount: target, currentAmount: 0, savings: [], method };
+        await addDoc(getCollectionRef('goals'), newGoal);
+        showNotification(`Goal "${name}" created!`, 'success');
+        e.target.reset();
+    });
+
+    async function openAddSavingsModal(goalId) {
+        if (!currentUser) return;
+        const formHTML = `
+            <form class="space-y-4">
+                <div>
+                    <label class="block text-sm text-left text-slate-300">Amount to Add</label>
+                    <input type="number" id="savings-amount" placeholder="e.g., 500" class="mt-1 w-full bg-gray-900/50 border border-gray-700 rounded-lg p-3" required>
+                </div>
+                <div>
+                    <label class="block text-sm text-left text-slate-300">Source</label>
+                    <select id="savings-source" class="mt-1 w-full bg-gray-900/50 border border-gray-700 rounded-lg p-3" required>
+                        <option value="Cash">Cash</option>
+                        <option value="Bank Account">Bank Account</option>
+                    </select>
+                </div>
+                <button type="submit" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-2 rounded-lg">Add Savings</button>
+            </form>`;
+        showCustomModal('Add Savings', formHTML, async (e) => {
+            const savingsAmount = parseFloat(e.target.querySelector('#savings-amount').value);
+            const savingsSource = e.target.querySelector('#savings-source').value;
+            if (isNaN(savingsAmount) || savingsAmount <= 0) return showNotification('Invalid amount.', 'error');
+            
+            const goalDocRef = getDocRef('goals', goalId);
+            const docSnap = await getDoc(goalDocRef);
+            if(docSnap.exists()){
+                const goal = docSnap.data();
+                const wasCompleted = goal.currentAmount >= goal.targetAmount;
+                const newCurrentAmount = goal.currentAmount + savingsAmount;
+                const newSavings = [...(goal.savings || []), { amount: savingsAmount, source: savingsSource, date: new Date() }];
+                await setDoc(goalDocRef, { currentAmount: newCurrentAmount, savings: newSavings }, { merge: true });
+                
+                const isNowCompleted = newCurrentAmount >= goal.targetAmount;
+
+                if (isNowCompleted && !wasCompleted) {
+                    showModal('Congratulations!', `You've achieved your goal: "${goal.name}"!`);
+                } else {
+                    showModal('Hurray!', `Progress made on "${goal.name}"!`);
+                }
+            }
+        });
+    }
+
+    async function deleteGoal(id) {
+        if (!currentUser) return;
+        showModal('Confirm Delete', 'Are you sure you want to delete this goal?', async () => {
+            await deleteDoc(getDocRef('goals', id));
+            showNotification('Goal deleted.', 'success');
+        });
+    }
+
+    function toggleSavingsHistory(goalId) {
+        document.getElementById(`history-${goalId}`).classList.toggle('hidden');
+    }
+
+    // --- Split Expenses Logic ---
+    function renderSplitExpensesPage() {
+        const form = document.getElementById('expense-splitter-form');
+        const resultsContainer = document.getElementById('split-results');
+        
+        if (form.dataset.listenerAttached) return;
+        form.dataset.listenerAttached = 'true';
+
+        form.addEventListener('submit', (e) => {
+            e.preventDefault();
+        
+            const title = document.getElementById('split-title').value;
+            const totalExpense = parseFloat(document.getElementById('split-total-expense').value);
+            const numPeople = parseInt(document.getElementById('split-num-people').value, 10);
+        
+            if (isNaN(totalExpense) || isNaN(numPeople) || numPeople <= 0) {
+                showMessageBox("Please enter valid numbers for expense and people.");
+                return;
+            }
+        
+            const sharePerPerson = (totalExpense / numPeople).toFixed(2);
+        
+            document.getElementById('output-title').textContent = title;
+            document.getElementById('output-total').textContent = totalExpense.toFixed(2);
+            document.getElementById('output-share').textContent = sharePerPerson;
+            
+            resultsContainer.classList.add('visible');
+        
+            const message = `Expense: ${title}%0A💸 Total: ₹${totalExpense.toFixed(2)}%0A👥 People: ${numPeople}%0A💰 *Share per Person: ₹${sharePerPerson}*`;
+        
+            document.getElementById('whatsapp-share').onclick = () => {
+                window.open(`https://wa.me/?text=${message}`, '_blank');
+            };
+            document.getElementById('telegram-share').onclick = () => {
+                window.open(`https://t.me/share/url?text=${message}`, '_blank');
+            };
+            document.getElementById('email-share').onclick = () => {
+                const subject = encodeURIComponent(`Cashmate: Expense Split for "${title}"`);
+                const body = encodeURIComponent(`Hello,\n\nHere is the breakdown of the expense:\nTitle: ${title}\nTotal Expense: ₹${totalExpense.toFixed(2)}\nNumber of People: ${numPeople}\n\nShare per Person: ₹${sharePerPerson}\n\nGenerated by Cashmate.`);
+                window.open(`mailto:?subject=${subject}&body=${body}`, '_blank');
+            };
+        });
+    }
+
+    // --- Rewards System ---
+    function renderRewards() {
+        if (!currentUser) return;
+        const rewardsContainer = document.querySelector('#rewards-view .grid');
+        const streakCountEl = document.getElementById('streak-count');
+        
+        onSnapshot(query(getCollectionRef('transactions'), where('type', '==', 'expense')), async (snapshot) => {
+            const expenses = snapshot.docs.map(doc => doc.data());
+            const goalsSnapshot = await getDocs(getCollectionRef('goals'));
+            const goals = goalsSnapshot.docs.map(doc => doc.data());
+
+            let streak = 0;
+            if (expenses.length > 0) {
+                const uniqueDays = [...new Set(expenses.map(e => new Date(e.date).toDateString()))].sort((a,b) => new Date(b) - new Date(a));
+                const today = new Date().toDateString();
+                const yesterday = new Date(Date.now() - 864e5).toDateString();
+                if (uniqueDays[0] === today || uniqueDays[0] === yesterday) {
+                    streak = 1;
+                    for (let i = 1; i < uniqueDays.length; i++) {
+                        const diff = (new Date(uniqueDays[i-1]) - new Date(uniqueDays[i])) / 864e5;
+                        if (diff === 1) streak++; else break;
+                    }
+                }
+            }
+            streakCountEl.textContent = streak;
+
+            const earnedBadges = [];
+            if (expenses.length > 0) earnedBadges.push('newbie');
+            if (streak >= 7) earnedBadges.push('saver-7');
+            if (goals.length > 0) earnedBadges.push('goal-setter');
+            if (goals.some(g => g.currentAmount >= g.targetAmount)) earnedBadges.push('goal-crusher');
+            
+            const allBadges = [
+                { id: 'newbie', title: 'Newbie Saver', desc: 'Logged your first expense.', icon: '🌱', earned: earnedBadges.includes('newbie') },
+                { id: 'saver-7', title: '7-Day Streak', desc: 'Logged expenses for 7 days straight.', icon: '🔥', earned: earnedBadges.includes('saver-7') },
+                { id: 'budget-king', title: 'Budget King', desc: 'Stayed within your monthly budget.', icon: '👑', earned: false }, // Placeholder logic
+                { id: 'goal-setter', title: 'Goal Setter', desc: 'Created your first financial goal.', icon: '🎯', earned: earnedBadges.includes('goal-setter') },
+                { id: 'goal-crusher', title: 'Goal Crusher', desc: 'Achieved a financial goal!', icon: '🏆', earned: earnedBadges.includes('goal-crusher') },
+                { id: 'frugal-master', title: 'Frugal Master', desc: 'Had a no-spend day.', icon: '🧘', earned: false }, // Placeholder logic
+            ];
+            
+            rewardsContainer.innerHTML = allBadges.map(badge => `
+                <div class="badge-card ${badge.earned ? '' : 'opacity-50'}">
+                    <div class="badge-inner relative w-full h-48">
+                        <div class="badge-front absolute w-full h-full glass-card rounded-xl flex flex-col items-center justify-center p-4">
+                            <div class="text-6xl mb-2">${badge.icon}</div><h4 class="font-bold text-lg">${badge.title}</h4>
+                        </div>
+                        <div class="badge-back absolute w-full h-full glass-card rounded-xl flex flex-col items-center justify-center p-4">
+                             <p class="text-center text-slate-300">${badge.desc}</p>
+                             ${badge.earned ? '<p class="mt-4 font-bold text-green-400">EARNED</p>' : '<p class="mt-4 font-bold text-yellow-400">LOCKED</p>'}
+                        </div>
+                    </div>
+                </div>`).join('');
+        });
+    }
+
+    // --- Reminders Logic ---
+    function renderRemindersPage() {
+        if (!currentUser) return;
+        const reminderForm = document.getElementById('reminder-form');
+        const reminderList = document.getElementById('reminderList');
+        const totalAmountSpan = document.getElementById('totalReminderAmount');
+
+        onSnapshot(getCollectionRef('reminders'), (snapshot) => {
+            const reminders = snapshot.docs.map(doc => doc.data());
+            reminderList.innerHTML = '';
+            let totalAmount = 0;
+            reminders.forEach(reminder => {
+                const reminderItem = document.createElement('li');
+                reminderItem.classList.add('expense-item');
+                reminderItem.innerHTML = `
+                    <div class="expense-info">
+                        <span class="amount">${formatCurrency(reminder.amount)}</span>
+                        <span class="details">${reminder.name} (${reminder.category})</span>
+                    </div>
+                    <div class="date">${new Date(reminder.addedDate.seconds * 1000).toLocaleDateString()}</div>`;
+                reminderList.prepend(reminderItem);
+                totalAmount += reminder.amount;
+            });
+            totalAmountSpan.textContent = totalAmount.toFixed(2);
+        });
+
+        if (reminderForm.dataset.listenerAttached) return;
+        reminderForm.dataset.listenerAttached = 'true';
+
+        reminderForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const name = document.getElementById('reminderName').value;
+            const amount = parseFloat(document.getElementById('reminderAmount').value);
+            const category = document.getElementById('reminderCategory').value;
+            const notificationDate = document.getElementById('notificationDate').value;
+            const notificationTime = document.getElementById('notificationTime').value;
+            const addedDate = new Date();
+
+            if (name && amount > 0 && category && notificationDate && notificationTime) {
+                const newReminder = { name, amount, category, notificationDate, notificationTime, addedDate };
+                await addDoc(getCollectionRef('reminders'), newReminder);
+                
+                reminderForm.reset();
+
+                if (Notification.permission === "granted") {
+                    const [year, month, day] = notificationDate.split('-');
+                    const [hour, minute] = notificationTime.split(':');
+                    const notifyDate = new Date(year, month - 1, day, hour, minute);
+                    const now = new Date();
+                    const timeUntilNotification = notifyDate.getTime() - now.getTime();
+                    
+                    if (timeUntilNotification > 0) {
+                        setTimeout(() => {
+                            new Notification('Cashmate Reminder: It\'s time to pay!', {
+                                body: `Your bill for "${name}" of ${formatCurrency(amount)} is due now!`,
+                                icon: 'https://cdn-icons-png.flaticon.com/512/1004/1004652.png'
+                            });
+                        }, timeUntilNotification);
+                        showNotification('Notification set successfully!', 'success');
+                    } else {
+                        showNotification('Cannot set notification for a past date/time.', 'error');
+                    }
+                }
+            } else {
+                showMessageBox('Please fill in all details correctly.');
+            }
+        });
+    }
+    
+    function requestNotificationPermission() {
+        if (!("Notification" in window)) {
+            console.log("This browser does not support desktop notification");
+        } else if (Notification.permission !== "denied") {
+            Notification.requestPermission().then(permission => {
+                if (permission === "granted") {
+                    console.log("Notification permission granted.");
+                }
+            });
+        }
+    }
+
+    // --- App Initialization ---
+    function setupEventListeners() {
+        document.body.addEventListener('click', (e) => {
+            const target = e.target.closest('[data-action]');
+            if (!target) return;
+
+            const { action, targetView, transactionId, goalId } = target.dataset;
+
+            switch (action) {
+                case 'navigate': if (targetView) navigateTo(targetView); break;
+                case 'show-coming-soon': showFeatureComingSoon(); break;
+                case 'delete-transaction': if (transactionId) deleteTransaction(transactionId); break;
+                case 'delete-goal': if (goalId) deleteGoal(goalId); break;
+                case 'open-add-savings': if (goalId) openAddSavingsModal(goalId); break;
+                case 'toggle-history': if (goalId) toggleSavingsHistory(goalId); break;
+                case 'logout': logOut(); break;
+            }
+        });
+        
+        document.querySelectorAll('.dashboard-filter-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.dashboard-filter-btn').forEach(b => b.classList.remove('bg-indigo-500/50'));
+                btn.classList.add('bg-indigo-500/50');
+                renderDashboardTotals(btn.dataset.period);
+            });
+        });
+        
+        document.getElementById('add-funds-btn').addEventListener('click', () => handleWalletTransaction('income'));
+        document.getElementById('withdraw-funds-btn').addEventListener('click', () => handleWalletTransaction('expense'));
+    }
+
+    function startApp() {
+        createStars();
+        setupEventListeners();
+        requestNotificationPermission();
+        
+        onAuthStateChanged(auth, (user) => {
+            if (user && user.emailVerified) {
+                currentUser = user;
+                document.getElementById('user-id-display').textContent = user.displayName || user.email;
+                navigateTo('dashboard-view');
+            } else {
+                currentUser = null;
+                navigateTo('get-started-view');
+            }
+        });
+    }
+    
+    // --- Run App ---
+    startApp();
+</script>
+
+</body>
+</html>
+
